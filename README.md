@@ -1,0 +1,1 @@
+# DekParinya_Stock
