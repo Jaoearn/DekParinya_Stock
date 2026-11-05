@@ -1,0 +1,22 @@
+@{
+    // ViewData: Status (string), Counts (Dictionary<DocStatus,int>), Total (int), Keyword
+    var status = ViewData["Status"] as string ?? "Pending";
+    var counts = ViewData["Counts"] as Dictionary<DocStatus, int> ?? new();
+    var total = ViewData["Total"] as int? ?? 0;
+    var keyword = ViewData["Keyword"] as string;
+    var tabs = new (string Key, string Label, int Count)[]
+    {
+        ("Pending", "Pending", counts.GetValueOrDefault(DocStatus.Pending)),
+        ("Approved", "Approved", counts.GetValueOrDefault(DocStatus.Approved)),
+        ("Rejected", "Rejected", counts.GetValueOrDefault(DocStatus.Rejected)),
+        ("All", "All", total)
+    };
+}
+<div class="status-tabs">
+    @foreach (var t in tabs)
+    {
+        <a class="status-tab @(status == t.Key ? "active" : "")" asp-action="Index" asp-route-status="@t.Key" asp-route-keyword="@keyword">
+            @t.Label <span class="count">@t.Count</span>
+        </a>
+    }
+</div>

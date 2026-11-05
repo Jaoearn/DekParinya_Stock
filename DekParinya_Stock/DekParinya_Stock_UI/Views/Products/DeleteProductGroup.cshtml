@@ -1,0 +1,42 @@
+@model ProductGroup
+@{
+    ViewData["Title"] = "Delete Product Group";
+    var productCount = (int)(ViewBag.ProductCount ?? 0);
+}
+
+<div class="page-header">
+    <div>
+        <nav class="breadcrumb"><a asp-action="ProductGroup">Product Group</a>&nbsp;/&nbsp;Delete</nav>
+        <h1 class="page-title">Delete Product Group</h1>
+    </div>
+</div>
+
+<form asp-action="DeleteProductGroup" asp-route-id="@Model.Id" method="post" class="card form-card">
+    <div class="card-body">
+        <h6 class="fw-semibold form-section-title">ต้องการลบกลุ่มสินค้านี้หรือไม่?</h6>
+        @if (productCount > 0)
+        {
+            <div class="alert alert-warning d-flex gap-2 align-items-center">
+                <i class="bi bi-exclamation-triangle"></i>
+                กลุ่มนี้มีสินค้า @productCount รายการ ต้องย้ายหรือลบสินค้าออกก่อนจึงจะลบกลุ่มได้
+            </div>
+        }
+        <div class="detail-grid">
+            <div class="detail-item"><div class="label">Group Code</div><div class="value">@Model.Code</div></div>
+            <div class="detail-item"><div class="label">Group Name</div><div class="value">@Model.Name</div></div>
+            <div class="detail-item"><div class="label">Description</div><div class="value">@(Model.Description ?? "-")</div></div>
+            <div class="detail-item"><div class="label">Status</div><div class="value">@(Model.IsActive ? "Active" : "Inactive")</div></div>
+            <div class="detail-item"><div class="label">Products</div><div class="value">@productCount</div></div>
+            <div class="detail-item"><div class="label">Created</div><div class="value">@Ui.Date(Model.CreatedAt)</div></div>
+        </div>
+        <div class="form-actions">
+            <a class="btn btn-outline-dark-grey" asp-action="ProductGroup"><i class="bi bi-arrow-left me-1"></i>Back</a>
+            <div class="actions-right">
+                <button type="submit" class="btn btn-primary" disabled="@(productCount > 0)"
+                        data-confirm="ยืนยันการลบกลุ่มสินค้า @Model.Name?" data-confirm-detail="ไม่สามารถกู้คืนได้" data-confirm-text="Delete">
+                    <i class="bi bi-trash me-1"></i>Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</form>

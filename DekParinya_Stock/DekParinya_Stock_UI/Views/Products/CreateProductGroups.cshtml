@@ -1,0 +1,25 @@
+@model ProductGroup
+@{
+    ViewData["Title"] = "Add Product Group";
+}
+
+<div class="page-header">
+    <div>
+        <nav class="breadcrumb"><a asp-action="ProductGroup">Product Group</a>&nbsp;/&nbsp;Add</nav>
+        <h1 class="page-title">Add Product Group</h1>
+    </div>
+</div>
+
+<form asp-action="CreateProductGroups" method="post" class="card form-card">
+    <div class="card-body">
+        <partial name="_ProductGroupForm" model="Model" />
+        <div class="form-actions">
+            <a class="btn btn-outline-dark-grey" asp-action="ProductGroup"><i class="bi bi-arrow-left me-1"></i>Back</a>
+            <div class="actions-right">
+                <button type="submit" class="btn btn-primary" data-confirm="ยืนยันการเพิ่มกลุ่มสินค้า?" data-confirm-text="Save">
+                    <i class="bi bi-check2 me-1"></i>Save
+                </button>
+            </div>
+        </div>
+    </div>
+</form>

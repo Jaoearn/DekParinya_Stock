@@ -1,0 +1,37 @@
+@model Product
+@inject IDataStore Store
+@{
+    ViewData["Title"] = "Delete Product";
+    var group = Store.GetGroup(Model.GroupId);
+}
+
+<div class="page-header">
+    <div>
+        <nav class="breadcrumb"><a asp-action="ProductList">Product List</a>&nbsp;/&nbsp;Delete</nav>
+        <h1 class="page-title">Delete Product</h1>
+    </div>
+</div>
+
+<form asp-action="DeleteProductList" asp-route-id="@Model.Id" method="post" class="card form-card">
+    <div class="card-body">
+        <h6 class="fw-semibold form-section-title">ต้องการลบสินค้านี้หรือไม่?</h6>
+        <div class="detail-grid">
+            <div class="detail-item"><div class="label">Product Code</div><div class="value">@Model.Code</div></div>
+            <div class="detail-item"><div class="label">Product Name</div><div class="value">@Model.Name</div></div>
+            <div class="detail-item"><div class="label">Product Group</div><div class="value">@(group?.Name ?? "-")</div></div>
+            <div class="detail-item"><div class="label">UOM</div><div class="value">@Model.Uom</div></div>
+            <div class="detail-item"><div class="label">Unit Price</div><div class="value">@Ui.Money(Model.UnitPrice)</div></div>
+            <div class="detail-item"><div class="label">Stock Qty</div><div class="value">@Ui.Num(Model.StockQty) @Ui.StockBadge(Model.State)</div></div>
+            <div class="detail-item"><div class="label">Vendor</div><div class="value">@(Model.Vendor ?? "-")</div></div>
+        </div>
+        <div class="form-actions">
+            <a class="btn btn-outline-dark-grey" asp-action="ProductList"><i class="bi bi-arrow-left me-1"></i>Back</a>
+            <div class="actions-right">
+                <button type="submit" class="btn btn-primary"
+                        data-confirm="ยืนยันการลบสินค้า @Model.Name?" data-confirm-detail="ไม่สามารถกู้คืนได้" data-confirm-text="Delete">
+                    <i class="bi bi-trash me-1"></i>Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</form>

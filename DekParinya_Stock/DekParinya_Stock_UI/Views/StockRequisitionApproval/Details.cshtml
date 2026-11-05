@@ -1,0 +1,35 @@
+@model StockRequisition
+@{
+    ViewData["Title"] = "Approve " + Model.DocNo;
+}
+
+<div class="page-header">
+    <div>
+        <nav class="breadcrumb"><a asp-action="Index">Requisition Approval</a>&nbsp;/&nbsp;@Model.DocNo</nav>
+        <h1 class="page-title">Requisition Approval</h1>
+    </div>
+</div>
+
+<div class="form-card">
+    <partial name="_RequisitionDoc" model="Model" />
+
+    <form id="approveForm" asp-action="Approve" asp-route-id="@Model.Id" method="post" hidden><input type="hidden" name="remark" /></form>
+    <form id="rejectForm" asp-action="Reject" asp-route-id="@Model.Id" method="post" hidden><input type="hidden" name="remark" /></form>
+
+    <div class="form-actions">
+        <a class="btn btn-outline-dark-grey" asp-action="Index"><i class="bi bi-arrow-left me-1"></i>Back</a>
+        @if (Model.Status == DocStatus.Pending)
+        {
+            <div class="actions-right">
+                <button type="button" class="btn btn-outline-accent" data-doc-action="reject" data-form="rejectForm"
+                        data-title="Reject @Model.DocNo?" data-text="ใบเบิกจะถูกเปลี่ยนสถานะเป็น Rejected">
+                    <i class="bi bi-x-circle me-1"></i>Reject
+                </button>
+                <button type="button" class="btn btn-blue" data-doc-action="approve" data-form="approveForm"
+                        data-title="Approve @Model.DocNo?" data-text="ยืนยันการอนุมัติใบเบิกจำนวน @Ui.Num(Model.TotalQty) หน่วย">
+                    <i class="bi bi-check-circle me-1"></i>Approve
+                </button>
+            </div>
+        }
+    </div>
+</div>

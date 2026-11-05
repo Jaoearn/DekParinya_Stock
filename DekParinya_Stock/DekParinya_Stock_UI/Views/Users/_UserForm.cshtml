@@ -1,0 +1,57 @@
+@model AppUser
+
+<div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+
+<div class="form-section">
+    <h6 class="fw-semibold form-section-title">User Information</h6>
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label asp-for="FullName" class="form-label">Full Name <span class="req">*</span></label>
+            <input asp-for="FullName" class="form-control" placeholder="ชื่อ-นามสกุล" required />
+            <span asp-validation-for="FullName" class="field-validation-error"></span>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="Email" class="form-label">Email <span class="req">*</span></label>
+            <input asp-for="Email" type="email" class="form-control" placeholder="name@dekparinya.com" required />
+            <span asp-validation-for="Email" class="field-validation-error"></span>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="Phone" class="form-label">Phone</label>
+            <input asp-for="Phone" type="tel" class="form-control" placeholder="08x-xxx-xxxx" />
+            <span asp-validation-for="Phone" class="field-validation-error"></span>
+        </div>
+    </div>
+</div>
+
+<div class="form-section">
+    <h6 class="fw-semibold form-section-title">Role &amp; Department</h6>
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label asp-for="Role" class="form-label">Role <span class="req">*</span></label>
+            <select asp-for="Role" class="form-select" required>
+                @foreach (var r in Lookups.Roles)
+                {
+                    <option value="@r">@r</option>
+                }
+            </select>
+            <span asp-validation-for="Role" class="field-validation-error"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="Department" class="form-label">Department <span class="req">*</span></label>
+            <select asp-for="Department" class="form-select" required>
+                <option value="">-- Select --</option>
+                @foreach (var d in Lookups.Departments)
+                {
+                    <option value="@d">@d</option>
+                }
+            </select>
+            <span asp-validation-for="Department" class="field-validation-error"></span>
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+            <div class="form-check form-switch mb-2">
+                <input asp-for="IsActive" class="form-check-input" type="checkbox" role="switch" />
+                <label asp-for="IsActive" class="form-check-label">Active</label>
+            </div>
+        </div>
+    </div>
+</div>

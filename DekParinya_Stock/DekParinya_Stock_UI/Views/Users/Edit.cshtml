@@ -1,0 +1,27 @@
+@model AppUser
+@{
+    ViewData["Title"] = "Edit User";
+}
+
+<div class="page-header">
+    <div>
+        <nav class="breadcrumb"><a asp-action="Index">Users</a>&nbsp;/&nbsp;Edit</nav>
+        <h1 class="page-title">Edit User</h1>
+        <p class="page-subtitle">@Model.FullName · สร้างเมื่อ @Ui.Date(Model.CreatedAt)</p>
+    </div>
+</div>
+
+<form asp-action="Edit" asp-route-id="@Model.Id" method="post" class="card form-card">
+    <div class="card-body">
+        <input type="hidden" asp-for="Id" />
+        <partial name="_UserForm" model="Model" />
+        <div class="form-actions">
+            <a class="btn btn-outline-dark-grey" asp-action="Index"><i class="bi bi-arrow-left me-1"></i>Back</a>
+            <div class="actions-right">
+                <button type="submit" class="btn btn-primary" data-confirm="ยืนยันการบันทึกการแก้ไข?" data-confirm-text="Save">
+                    <i class="bi bi-check2 me-1"></i>Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</form>

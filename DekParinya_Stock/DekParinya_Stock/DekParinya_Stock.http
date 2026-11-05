@@ -1,0 +1,6 @@
+@DekParinya_Stock_HostAddress = http://localhost:5133
+
+GET {{DekParinya_Stock_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

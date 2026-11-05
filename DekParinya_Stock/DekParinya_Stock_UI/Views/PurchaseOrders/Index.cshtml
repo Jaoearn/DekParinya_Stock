@@ -1,0 +1,124 @@
+@model List<Product>
+@inject IDataStore Store
+@{
+    ViewData["Title"] = "Purchase Order";
+    var vendor = ViewBag.Vendor as string;
+    var groupId = ViewBag.GroupId as int?;
+    var scope = ViewBag.Scope as string;
+    var vendors = Store.GetVendors();
+    var groups = Store.GetGroups();
+    var groupNames = groups.ToDictionary(g => g.Id, g => g.Name);
+    var estTotal = Model.Sum(p => p.SuggestedOrderQty * p.UnitPrice);
+}
+
+<div class="page-header">
+    <div>
+        <nav class="breadcrumb"><a asp-controller="Home" asp-action="Index">Dashboard</a>&nbsp;/&nbsp;Purchase Order</nav>
+        <h1 class="page-title">Purchase Order</h1>
+        <p class="page-subtitle">สินค้าที่ควรสั่งซื้อ — เลือกรายการแล้วกด Create Order</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-dark-grey" asp-controller="ProductDemand" asp-action="Index"><i class="bi bi-truck me-1"></i>Vendor Orders</a>
+        <a class="btn btn-primary" asp-action="Order" asp-route-vendor="@vendor"><i class="bi bi-plus-lg me-1"></i>New Order</a>
+    </div>
+</div>
+
+<div class="card filter-bar mb-3">
+    <div class="card-body">
+        <form method="get" asp-action="Index" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label" for="vendor">Vendor</label>
+                <select class="form-select" id="vendor" name="vendor">
+                    <option value="">All</option>
+                    @foreach (var v in vendors)
+                    {
+                        <option value="@v" selected="@(vendor == v)">@v</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="groupId">Product Group</label>
+                <select class="form-select" id="groupId" name="groupId">
+                    <option value="">All</option>
+                    @foreach (var g in groups)
+                    {
+                        <option value="@g.Id" selected="@(groupId == g.Id)">@g.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="scope">Show</label>
+                <select class="form-select" id="scope" name="scope">
+                    <option value="">Low / Out only</option>
+                    <option value="all" selected="@(scope == "all")">All products</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-search flex-grow-1"><i class="bi bi-search"></i> Search</button>
+                <a class="btn btn-outline-dark-grey" asp-action="Index" title="Reset"><i class="bi bi-arrow-counterclockwise"></i></a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<form method="get" asp-action="Order" id="poPickForm">
+    <input type="hidden" name="vendor" value="@vendor" />
+    <div class="card table-card">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h2 class="card-title-sm">Suggested Items <span class="text-muted fw-normal">(@Model.Count) · ประมาณการ @Ui.Money(estTotal)</span></h2>
+            <button type="submit" class="btn btn-primary btn-sm" id="btnCreateOrder" disabled><i class="bi bi-cart-plus me-1"></i>Create Order (<span id="pickCount">0</span>)</button>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-app table-hover">
+                <thead>
+                    <tr>
+                        <th style="width:40px"><input type="checkbox" class="form-check-input" id="pickAll" aria-label="Select all" /></th>
+                        <th>Product</th><th>Group</th><th>Vendor</th><th class="text-end">Stock</th><th class="text-end">Reorder</th>
+                        <th class="text-end">Suggested Qty</th><th>UOM</th><th class="text-end">Est. Amount</th><th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in Model)
+                    {
+                        <tr>
+                            <td><input type="checkbox" class="form-check-input pick" name="productIds" value="@p.Id" aria-label="Select @p.Name" /></td>
+                            <td><div class="fw-medium">@p.Name</div><div class="small text-muted">@p.Code</div></td>
+                            <td>@(groupNames.TryGetValue(p.GroupId, out var gName) ? gName : "-")</td>
+                            <td><a asp-action="Index" asp-route-vendor="@p.Vendor">@p.Vendor</a></td>
+                            <td class="text-end fw-semibold">@Ui.Num(p.StockQty)</td>
+                            <td class="text-end text-muted">@Ui.Num(p.ReorderLevel)</td>
+                            <td class="text-end text-deep-blue fw-semibold">@Ui.Num(p.SuggestedOrderQty)</td>
+                            <td>@p.Uom</td>
+                            <td class="text-end">@Ui.Money(p.SuggestedOrderQty * p.UnitPrice)</td>
+                            <td>@Ui.StockBadge(p.State)</td>
+                        </tr>
+                    }
+                    @if (!Model.Any())
+                    {
+                        <tr><td colspan="10" class="empty-state"><i class="bi bi-check2-circle"></i>ไม่มีสินค้าที่ต้องสั่งซื้อ</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        (function () {
+            var picks = document.querySelectorAll('.pick');
+            var all = document.getElementById('pickAll');
+            var btn = document.getElementById('btnCreateOrder');
+            var count = document.getElementById('pickCount');
+            function update() {
+                var n = document.querySelectorAll('.pick:checked').length;
+                count.textContent = n;
+                btn.disabled = n === 0;
+                all.checked = n > 0 && n === picks.length;
+                all.indeterminate = n > 0 && n < picks.length;
+            }
+            picks.forEach(function (c) { c.addEventListener('change', update); });
+            all.addEventListener('change', function () { picks.forEach(function (c) { c.checked = all.checked; }); update(); });
+        })();
+    </script>
+}

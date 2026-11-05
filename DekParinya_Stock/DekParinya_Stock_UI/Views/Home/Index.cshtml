@@ -1,0 +1,200 @@
+@model DashboardViewModel
+@using System.Text.Json
+@inject IDataStore Store
+@{
+    ViewData["Title"] = "Dashboard";
+    var groupNames = Store.GetGroups().ToDictionary(g => g.Id, g => g.Name);
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">ภาพรวมสต๊อกสินค้า ณ วันที่ @Ui.Date(DateTime.Today)</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-dark-grey" asp-controller="Reports" asp-action="StockBalance"><i class="bi bi-file-earmark-bar-graph me-1"></i>Stock Balance</a>
+        <a class="btn btn-primary" asp-controller="StockRequisitions" asp-action="Create"><i class="bi bi-plus-lg me-1"></i>Add a Requisition</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card">
+            <div class="stat-icon red"><i class="bi bi-box-seam"></i></div>
+            <div>
+                <div class="stat-label">Total Products</div>
+                <div class="stat-value">@Ui.Num(Model.TotalProducts)</div>
+                <a class="stat-link" asp-controller="Products" asp-action="ProductList">@Model.TotalGroups groups <i class="bi bi-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card">
+            <div class="stat-icon blue"><i class="bi bi-stack"></i></div>
+            <div>
+                <div class="stat-label">Total Stock Qty</div>
+                <div class="stat-value">@Ui.Num(Model.TotalStockQty)</div>
+                <span class="stat-link text-muted">มูลค่า @Ui.Money(Model.StockValue)</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card">
+            <div class="stat-icon amber"><i class="bi bi-exclamation-triangle"></i></div>
+            <div>
+                <div class="stat-label">Low / Out of Stock</div>
+                <div class="stat-value">@Model.LowStockCount <span class="fs-6 text-muted">/ @Model.OutOfStockCount</span></div>
+                <a class="stat-link" asp-controller="PurchaseOrders" asp-action="Index">Create order <i class="bi bi-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card">
+            <div class="stat-icon deep"><i class="bi bi-hourglass-split"></i></div>
+            <div>
+                <div class="stat-label">Pending Approval</div>
+                <div class="stat-value">@(Model.PendingRequisitions + Model.PendingAdjustments)</div>
+                <span class="stat-link">
+                    <a asp-controller="StockRequisitionApproval" asp-action="Index">REQ @Model.PendingRequisitions</a> ·
+                    <a asp-controller="StockAdjustmentApproval" asp-action="Index">ADJ @Model.PendingAdjustments</a>
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h2 class="card-title-sm">Stock by Product Group</h2>
+                <span class="text-muted small">หน่วย: จำนวนคงเหลือ</span>
+            </div>
+            <div class="card-body"><div class="chart-box"><canvas id="chartGroup"></canvas></div></div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h2 class="card-title-sm">Requisition Qty (6 months)</h2>
+                <span class="text-muted small">ไม่รวมที่ Rejected</span>
+            </div>
+            <div class="card-body"><div class="chart-box"><canvas id="chartMonth"></canvas></div></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card table-card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h2 class="card-title-sm"><i class="bi bi-exclamation-circle text-accent me-1"></i>Low Stock Items</h2>
+                <a class="small" asp-controller="Reports" asp-action="StockBalance" asp-route-stock="Low">View all</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-app table-hover">
+                    <thead><tr><th>Product</th><th>Group</th><th class="text-end">Stock</th><th class="text-end">Reorder</th><th>Status</th></tr></thead>
+                    <tbody>
+                        @foreach (var p in Model.LowStockItems)
+                        {
+                            <tr>
+                                <td><a class="doc-link" asp-controller="Products" asp-action="EditProductList" asp-route-id="@p.Id">@p.Name</a><div class="small text-muted">@p.Code</div></td>
+                                <td>@(groupNames.TryGetValue(p.GroupId, out var gName) ? gName : "-")</td>
+                                <td class="text-end fw-semibold">@Ui.Num(p.StockQty)</td>
+                                <td class="text-end text-muted">@Ui.Num(p.ReorderLevel)</td>
+                                <td>@Ui.StockBadge(p.State)</td>
+                            </tr>
+                        }
+                        @if (!Model.LowStockItems.Any())
+                        {
+                            <tr><td colspan="5" class="empty-state"><i class="bi bi-check2-circle"></i>สต๊อกทุกรายการอยู่ในระดับปกติ</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card table-card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h2 class="card-title-sm"><i class="bi bi-clock-history text-deep-blue me-1"></i>Recent Requisitions</h2>
+                <a class="small" asp-controller="StockRequisitions" asp-action="Index">View all</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-app table-hover">
+                    <thead><tr><th>Doc No.</th><th>Date</th><th>Event</th><th class="text-end">Qty</th><th>Status</th></tr></thead>
+                    <tbody>
+                        @foreach (var r in Model.RecentRequisitions)
+                        {
+                            <tr>
+                                <td><a class="doc-link" asp-controller="StockRequisitions" asp-action="Details" asp-route-id="@r.Id">@r.DocNo</a></td>
+                                <td>@Ui.Date(r.RequestDate)</td>
+                                <td class="text-truncate" style="max-width:150px">@r.Event</td>
+                                <td class="text-end">@Ui.Num(r.TotalQty)</td>
+                                <td>@Ui.StatusBadge(r.Status)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js"></script>
+    <script>
+        (function () {
+            var groupLabels = @Html.Raw(JsonSerializer.Serialize(Model.GroupLabels));
+            var groupData = @Html.Raw(JsonSerializer.Serialize(Model.GroupStock));
+            var monthLabels = @Html.Raw(JsonSerializer.Serialize(Model.MonthLabels));
+            var monthData = @Html.Raw(JsonSerializer.Serialize(Model.MonthRequisitionQty));
+            var LIGHT_BLUE = '#0090BA';
+            var charts = [];
+
+            function palette() {
+                var dark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+                return { text: dark ? '#9AA7AF' : '#6E7A82', grid: dark ? 'rgba(255,255,255,.07)' : 'rgba(51,63,72,.08)' };
+            }
+
+            function baseOptions() {
+                var c = palette();
+                return {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { backgroundColor: '#333F48', titleFont: { family: 'Prompt' }, bodyFont: { family: 'Prompt' }, padding: 10, cornerRadius: 8 }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: c.text, font: { family: 'Prompt' } } },
+                        y: { beginAtZero: true, grid: { color: c.grid }, ticks: { color: c.text, font: { family: 'Prompt' } } }
+                    }
+                };
+            }
+
+            function build() {
+                charts.forEach(function (ch) { ch.destroy(); });
+                charts = [];
+                charts.push(new Chart(document.getElementById('chartGroup'), {
+                    type: 'bar',
+                    data: { labels: groupLabels, datasets: [{ label: 'Stock Qty', data: groupData, backgroundColor: LIGHT_BLUE, hoverBackgroundColor: '#005978', borderRadius: 8, maxBarThickness: 46 }] },
+                    options: baseOptions()
+                }));
+                charts.push(new Chart(document.getElementById('chartMonth'), {
+                    type: 'line',
+                    data: {
+                        labels: monthLabels,
+                        datasets: [{
+                            label: 'Requisition Qty', data: monthData, borderColor: LIGHT_BLUE, backgroundColor: 'rgba(0,144,186,.12)',
+                            fill: true, tension: .35, pointBackgroundColor: LIGHT_BLUE, pointRadius: 4, pointHoverRadius: 6, borderWidth: 2.5
+                        }]
+                    },
+                    options: baseOptions()
+                }));
+            }
+
+            build();
+            document.addEventListener('themechange', build);
+        })();
+    </script>
+}

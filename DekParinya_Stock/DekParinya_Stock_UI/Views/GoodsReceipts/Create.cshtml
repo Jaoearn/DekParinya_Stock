@@ -1,0 +1,157 @@
+@model GoodsReceiptCreateViewModel
+@inject IDataStore Store
+@{
+    ViewData["Title"] = "Add GR";
+    var suppliers = Store.GetGrSuppliers();
+    var rows = Model.Lines.Any() ? Model.Lines : new List<GoodsReceiptLineInput> { new() { Qty = 1 } };
+}
+
+<div class="page-header">
+    <div>
+        <nav class="breadcrumb"><a asp-action="Index">Goods Receipt</a>&nbsp;/&nbsp;Add</nav>
+        <h1 class="page-title">Add Goods Receipt</h1>
+        <p class="page-subtitle">บันทึกรับเข้าวัตถุดิบ (ดิน / กาก / ขุย ฯลฯ) และแนบรูปถ่ายของที่รับเข้า</p>
+    </div>
+</div>
+
+<form asp-action="Create" method="post" enctype="multipart/form-data" class="card form-card" novalidate>
+    <div class="card-body">
+        <div asp-validation-summary="All" class="validation-summary-errors"></div>
+
+        <div class="form-section">
+            <h6 class="fw-semibold form-section-title">Receipt Information</h6>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label asp-for="ReceiveDate" class="form-label">Receive Date <span class="req">*</span></label>
+                    <input asp-for="ReceiveDate" type="date" class="form-control" value="@Ui.Iso(Model.ReceiveDate)" required />
+                    <span asp-validation-for="ReceiveDate" class="field-validation-error"></span>
+                </div>
+                <div class="col-md-5">
+                    <label asp-for="Supplier" class="form-label">Supplier <span class="req">*</span></label>
+                    <input asp-for="Supplier" class="form-control" list="grSupplierList" placeholder="ผู้ส่ง / ซัพพลายเออร์" required />
+                    <datalist id="grSupplierList">
+                        @foreach (var s in suppliers)
+                        {
+                            <option value="@s"></option>
+                        }
+                    </datalist>
+                    <span asp-validation-for="Supplier" class="field-validation-error"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="ReceivedBy" class="form-label">Received By <span class="req">*</span></label>
+                    <input asp-for="ReceivedBy" class="form-control" required />
+                    <span asp-validation-for="ReceivedBy" class="field-validation-error"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="RefNo" class="form-label">Delivery Note No.</label>
+                    <input asp-for="RefNo" class="form-control" placeholder="เลขที่ใบส่งของ" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="VehicleNo" class="form-label">Vehicle No.</label>
+                    <input asp-for="VehicleNo" class="form-control" placeholder="ทะเบียนรถ เช่น 70-1234" />
+                </div>
+                <div class="col-12">
+                    <label asp-for="Remark" class="form-label">Remark</label>
+                    <textarea asp-for="Remark" class="form-control" rows="2" placeholder="สภาพของ / ความชื้น / หมายเหตุ"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="fw-semibold form-section-title mb-0 border-0 pb-0">Materials <span class="req">*</span></h6>
+                <button type="button" class="btn btn-outline-accent btn-sm" data-add-line="grLines"><i class="bi bi-plus-lg me-1"></i>Add Item</button>
+            </div>
+            <datalist id="materialList">
+                @foreach (var m in RawMaterials.All)
+                {
+                    <option value="@m"></option>
+                }
+            </datalist>
+            <div class="table-responsive border rounded-3">
+                <table class="table table-app line-table mb-0" id="grLines" data-line-table data-template="grLinesTpl" data-prefix="Lines">
+                    <thead>
+                        <tr>
+                            <th class="line-no">#</th>
+                            <th style="min-width:240px">Material <span class="req">*</span></th>
+                            <th style="width:130px">Qty <span class="req">*</span></th>
+                            <th style="width:150px">Unit <span class="req">*</span></th>
+                            <th style="width:150px">Quality</th>
+                            <th style="min-width:180px">Remark</th>
+                            <th style="width:56px"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var line in rows)
+                        {
+                            <tr class="line-row">
+                                <td class="line-no"></td>
+                                <td><input type="text" class="form-control" data-field="Material" list="materialList" maxlength="200" value="@line.Material" placeholder="เลือกหรือพิมพ์ เช่น ขุยมะพร้าว" required /></td>
+                                <td><input type="number" class="form-control text-end" data-field="Qty" min="0.01" step="0.01" value="@(line.Qty > 0 ? line.Qty.ToString(System.Globalization.CultureInfo.InvariantCulture) : "1")" required /></td>
+                                <td>
+                                    <select class="form-select" data-field="Unit">
+                                        @foreach (var u in RawMaterials.Units)
+                                        {
+                                            <option value="@u" selected="@(u == line.Unit)">@u</option>
+                                        }
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="form-select" data-field="Quality">
+                                        @foreach (var qv in RawMaterials.Qualities)
+                                        {
+                                            <option value="@qv" selected="@(qv == line.Quality)">@qv</option>
+                                        }
+                                    </select>
+                                </td>
+                                <td><input type="text" class="form-control" data-field="Remark" maxlength="200" value="@line.Remark" placeholder="หมายเหตุ" /></td>
+                                <td class="text-center"><button type="button" class="btn btn-outline-accent btn-icon" data-remove-line title="Remove"><i class="bi bi-x-lg"></i></button></td>
+                            </tr>
+                        }
+                        <tr class="line-empty" hidden><td colspan="7" class="empty-state py-4"><i class="bi bi-basket"></i>ยังไม่มีรายการ กด Add Item เพื่อเพิ่ม</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h6 class="fw-semibold form-section-title">Photos <span class="text-muted fw-normal small">(รูปของที่รับเข้า / ใบส่งของ / ทะเบียนรถ)</span></h6>
+            <partial name="_ImageUploader" model="ImageUploadService.MaxFiles" />
+        </div>
+
+        <div class="form-actions">
+            <a class="btn btn-outline-dark-grey" asp-action="Index"><i class="bi bi-arrow-left me-1"></i>Back</a>
+            <div class="actions-right">
+                <button type="submit" class="btn btn-primary" data-confirm="ยืนยันการบันทึกรับเข้า?" data-confirm-text="Save">
+                    <i class="bi bi-check2 me-1"></i>Save GR
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<template id="grLinesTpl">
+    <tr class="line-row">
+        <td class="line-no"></td>
+        <td><input type="text" class="form-control" data-field="Material" list="materialList" maxlength="200" placeholder="เลือกหรือพิมพ์ เช่น ขุยมะพร้าว" required /></td>
+        <td><input type="number" class="form-control text-end" data-field="Qty" min="0.01" step="0.01" value="1" required /></td>
+        <td>
+            <select class="form-select" data-field="Unit">
+                @foreach (var u in RawMaterials.Units)
+                {
+                    <option value="@u">@u</option>
+                }
+            </select>
+        </td>
+        <td>
+            <select class="form-select" data-field="Quality">
+                @foreach (var qv in RawMaterials.Qualities)
+                {
+                    <option value="@qv">@qv</option>
+                }
+            </select>
+        </td>
+        <td><input type="text" class="form-control" data-field="Remark" maxlength="200" placeholder="หมายเหตุ" /></td>
+        <td class="text-center"><button type="button" class="btn btn-outline-accent btn-icon" data-remove-line title="Remove"><i class="bi bi-x-lg"></i></button></td>
+    </tr>
+</template>

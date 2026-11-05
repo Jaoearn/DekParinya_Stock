@@ -1,0 +1,92 @@
+@model List<StockAdjustment>
+@{
+    ViewData["Title"] = "Stock Adjustment";
+    var keyword = ViewBag.Keyword as string;
+    var status = ViewBag.Status as DocStatus?;
+    var type = ViewBag.Type as AdjustmentType?;
+    var from = ViewBag.From as DateTime?;
+    var to = ViewBag.To as DateTime?;
+}
+
+<div class="page-header">
+    <div>
+        <nav class="breadcrumb"><a asp-controller="Home" asp-action="Index">Dashboard</a>&nbsp;/&nbsp;Stock Adjustment</nav>
+        <h1 class="page-title">Stock Adjustment</h1>
+        <p class="page-subtitle">ใบปรับปรุงยอดสต๊อก (เพิ่ม / ลด)</p>
+    </div>
+    <a class="btn btn-primary" asp-action="Create"><i class="bi bi-plus-lg me-1"></i>Add Adjustment</a>
+</div>
+
+<div class="card filter-bar mb-3">
+    <div class="card-body">
+        <form method="get" asp-action="Index" class="row g-2 align-items-end">
+            <div class="col-lg-3">
+                <label class="form-label" for="keyword">Keyword</label>
+                <input type="text" class="form-control" id="keyword" name="keyword" value="@keyword" placeholder="เลขที่เอกสาร / ผู้ทำรายการ / เหตุผล" />
+            </div>
+            <div class="col-lg-2 col-md-3">
+                <label class="form-label" for="type">Type</label>
+                <select class="form-select" id="type" name="type">
+                    <option value="">All</option>
+                    @foreach (var t in Enum.GetValues<AdjustmentType>())
+                    {
+                        <option value="@t" selected="@(type == t)">@t</option>
+                    }
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-3">
+                <label class="form-label" for="status">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">All</option>
+                    @foreach (var s in Enum.GetValues<DocStatus>())
+                    {
+                        <option value="@s" selected="@(status == s)">@s</option>
+                    }
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-3">
+                <label class="form-label" for="from">From</label>
+                <input type="date" class="form-control" id="from" name="from" value="@Ui.Iso(from)" />
+            </div>
+            <div class="col-lg-1 col-md-3">
+                <label class="form-label" for="to">To</label>
+                <input type="date" class="form-control" id="to" name="to" value="@Ui.Iso(to)" />
+            </div>
+            <div class="col-lg-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-search flex-grow-1"><i class="bi bi-search"></i> Search</button>
+                <a class="btn btn-outline-dark-grey" asp-action="Index" title="Reset"><i class="bi bi-arrow-counterclockwise"></i></a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card table-card">
+    <div class="card-header"><h2 class="card-title-sm">Adjustments <span class="text-muted fw-normal">(@Model.Count)</span></h2></div>
+    <div class="table-responsive">
+        <table class="table table-app table-hover">
+            <thead>
+                <tr><th>Doc No.</th><th>Adjust Date</th><th>Type</th><th>Reason</th><th>Requester</th><th class="text-end">Items</th><th class="text-end">Total Qty</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var a in Model)
+                {
+                    <tr>
+                        <td><a class="doc-link" asp-action="Details" asp-route-id="@a.Id">@a.DocNo</a></td>
+                        <td>@Ui.Date(a.AdjustDate)</td>
+                        <td>@Ui.AdjustTypeBadge(a.Type)</td>
+                        <td>@a.Reason</td>
+                        <td>@a.Requester</td>
+                        <td class="text-end">@a.Lines.Count</td>
+                        <td class="text-end fw-semibold">@Ui.Num(a.TotalQty)</td>
+                        <td>@Ui.StatusBadge(a.Status)</td>
+                        <td class="text-end"><a class="btn btn-outline-dark-grey btn-icon" asp-action="Details" asp-route-id="@a.Id" title="View"><i class="bi bi-eye"></i></a></td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="9" class="empty-state"><i class="bi bi-inbox"></i>ไม่พบข้อมูล</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

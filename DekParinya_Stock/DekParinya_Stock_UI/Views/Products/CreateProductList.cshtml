@@ -1,0 +1,25 @@
+@model Product
+@{
+    ViewData["Title"] = "Add Product";
+}
+
+<div class="page-header">
+    <div>
+        <nav class="breadcrumb"><a asp-action="ProductList">Product List</a>&nbsp;/&nbsp;Add</nav>
+        <h1 class="page-title">Add Product</h1>
+    </div>
+</div>
+
+<form asp-action="CreateProductList" method="post" class="card form-card">
+    <div class="card-body">
+        <partial name="_ProductForm" model="Model" />
+        <div class="form-actions">
+            <a class="btn btn-outline-dark-grey" asp-action="ProductList"><i class="bi bi-arrow-left me-1"></i>Back</a>
+            <div class="actions-right">
+                <button type="submit" class="btn btn-primary" data-confirm="ยืนยันการเพิ่มสินค้า?" data-confirm-text="Save">
+                    <i class="bi bi-check2 me-1"></i>Save
+                </button>
+            </div>
+        </div>
+    </div>
+</form>

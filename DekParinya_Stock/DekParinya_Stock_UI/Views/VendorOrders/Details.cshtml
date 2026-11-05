@@ -1,0 +1,50 @@
+@model List<Product>
+@{
+    var vendor = ViewBag.Vendor as string ?? "";
+    var pending = ViewBag.PendingQty as Dictionary<int, int> ?? new();
+    ViewData["Title"] = vendor;
+    var need = Model.Where(p => p.State != StockState.Normal).ToList();
+}
+
+<div class="page-header">
+    <div>
+        <nav class="breadcrumb"><a asp-action="Index">Vendor Orders</a>&nbsp;/&nbsp;@vendor</nav>
+        <h1 class="page-title">@vendor</h1>
+        <p class="page-subtitle">สินค้า @Model.Count รายการ · ต้องสั่งซื้อ @need.Count รายการ · ประมาณการ @Ui.Money(need.Sum(p => p.SuggestedOrderQty * p.UnitPrice))</p>
+    </div>
+</div>
+
+<div class="card table-card form-card">
+    <div class="table-responsive">
+        <table class="table table-app table-hover">
+            <thead>
+                <tr><th>Product</th><th>UOM</th><th class="text-end">Stock</th><th class="text-end">Reorder</th><th class="text-end">Pending Req.</th><th class="text-end">Suggested</th><th class="text-end">Unit Price</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var p in Model)
+                {
+                    <tr>
+                        <td><div class="fw-medium">@p.Name</div><div class="small text-muted">@p.Code</div></td>
+                        <td>@p.Uom</td>
+                        <td class="text-end fw-semibold">@Ui.Num(p.StockQty)</td>
+                        <td class="text-end text-muted">@Ui.Num(p.ReorderLevel)</td>
+                        <td class="text-end">@Ui.Num(pending.GetValueOrDefault(p.Id))</td>
+                        <td class="text-end text-deep-blue fw-semibold">@(p.State == StockState.Normal ? "-" : Ui.Num(p.SuggestedOrderQty))</td>
+                        <td class="text-end">@Ui.Money(p.UnitPrice)</td>
+                        <td>@Ui.StockBadge(p.State)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="form-actions form-card">
+    <a class="btn btn-outline-dark-grey" asp-action="Index"><i class="bi bi-arrow-left me-1"></i>Back</a>
+    <div class="actions-right">
+        @if (need.Any())
+        {
+            <a class="btn btn-primary" asp-controller="PurchaseOrders" asp-action="Order" asp-route-vendor="@vendor"><i class="bi bi-cart-plus me-1"></i>Create Order</a>
+        }
+    </div>
+</div>

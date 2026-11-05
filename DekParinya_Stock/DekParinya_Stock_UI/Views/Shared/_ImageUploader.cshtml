@@ -1,0 +1,15 @@
+@model int
+@{
+    // Model = จำนวนรูปที่ยังแนบได้ (MaxFiles - รูปที่มีอยู่แล้ว)
+    var inputId = ViewData["UploaderId"] as string ?? "grImages";
+}
+<div class="image-uploader" data-image-uploader data-max-files="@Model" data-max-mb="5">
+    <input type="file" name="images" id="@inputId" class="visually-hidden"
+           accept="image/jpeg,image/png,image/webp,image/gif" multiple />
+    <label for="@inputId" class="drop-zone">
+        <i class="bi bi-cloud-arrow-up"></i>
+        <span class="dz-title">ลากรูปมาวางที่นี่ หรือ <u>คลิกเพื่อเลือกรูป</u></span>
+        <span class="dz-hint">JPG, PNG, WEBP, GIF · ไม่เกิน 5 MB ต่อรูป · แนบได้อีก <b data-remaining>@Model</b> รูป</span>
+    </label>
+    <div class="preview-grid" data-preview></div>
+</div>

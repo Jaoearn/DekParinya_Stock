@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="DekParinya_Stock/DekParinya_Stock_API.csproj" />
+  <Project Path="DekParinya_Stock_UI/DekParinya_Stock_UI.csproj" />
+</Solution>

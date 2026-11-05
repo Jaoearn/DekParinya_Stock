@@ -1,0 +1,70 @@
+@model RequisitionCreateViewModel
+@{
+    ViewData["Title"] = "Add a Requisition";
+    ViewData["StockLabel"] = "On Hand";
+    ViewData["LineTableId"] = "reqLines";
+}
+
+<div class="page-header">
+    <div>
+        <nav class="breadcrumb"><a asp-action="Index">Stock Requisition</a>&nbsp;/&nbsp;Add</nav>
+        <h1 class="page-title">Add a Requisition</h1>
+        <p class="page-subtitle">สร้างใบเบิกสินค้า — เอกสารจะมีสถานะ Pending จนกว่าจะได้รับการอนุมัติ</p>
+    </div>
+</div>
+
+<form asp-action="Create" method="post" class="card form-card" novalidate>
+    <div class="card-body">
+        <div asp-validation-summary="All" class="validation-summary-errors"></div>
+
+        <div class="form-section">
+            <h6 class="fw-semibold form-section-title">Requisition Information</h6>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label asp-for="RequestDate" class="form-label">Request Date <span class="req">*</span></label>
+                    <input asp-for="RequestDate" class="form-control" type="date" value="@Ui.Iso(Model.RequestDate)" required />
+                    <span asp-validation-for="RequestDate" class="field-validation-error"></span>
+                </div>
+                <div class="col-md-5">
+                    <label asp-for="Requester" class="form-label">Requester <span class="req">*</span></label>
+                    <input asp-for="Requester" class="form-control" placeholder="ชื่อผู้ขอเบิก" required />
+                    <span asp-validation-for="Requester" class="field-validation-error"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Department" class="form-label">Department <span class="req">*</span></label>
+                    <select asp-for="Department" class="form-select" required>
+                        <option value="">-- Select --</option>
+                        @foreach (var d in Lookups.Departments)
+                        {
+                            <option value="@d">@d</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Department" class="field-validation-error"></span>
+                </div>
+                <div class="col-md-12">
+                    <label asp-for="Event" class="form-label">Event <span class="req">*</span></label>
+                    <input asp-for="Event" class="form-control" maxlength="200" placeholder="เช่น Group Class: Body Combat, Member Day" required />
+                    <span asp-validation-for="Event" class="field-validation-error"></span>
+                </div>
+                <div class="col-12">
+                    <label asp-for="Remark" class="form-label">Remark</label>
+                    <textarea asp-for="Remark" class="form-control" rows="2" placeholder="หมายเหตุเพิ่มเติม"></textarea>
+                    <span asp-validation-for="Remark" class="field-validation-error"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <partial name="_DocLinesTable" model="Model.Lines" view-data="ViewData" />
+        </div>
+
+        <div class="form-actions">
+            <a class="btn btn-outline-dark-grey" asp-action="Index"><i class="bi bi-arrow-left me-1"></i>Back</a>
+            <div class="actions-right">
+                <button type="submit" class="btn btn-primary" data-confirm="ยืนยันการสร้างใบเบิก?" data-confirm-detail="ใบเบิกจะถูกส่งไปรออนุมัติ" data-confirm-text="Submit">
+                    <i class="bi bi-send me-1"></i>Submit Requisition
+                </button>
+            </div>
+        </div>
+    </div>
+</form>

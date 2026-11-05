@@ -1,0 +1,82 @@
+@model StockAdjustment
+@{
+    var sign = Model.Type == AdjustmentType.Increase ? 1 : -1;
+}
+
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="doc-hero mb-3">
+            <div>
+                <div class="text-muted small">Stock Adjustment</div>
+                <div class="doc-no">@Model.DocNo</div>
+            </div>
+            <div class="d-flex gap-2 align-items-center">@Ui.AdjustTypeBadge(Model.Type) @Ui.StatusBadge(Model.Status)</div>
+        </div>
+        <h6 class="fw-semibold form-section-title">Adjustment Information</h6>
+        <div class="detail-grid">
+            <div class="detail-item"><div class="label">Adjust Date</div><div class="value">@Ui.Date(Model.AdjustDate)</div></div>
+            <div class="detail-item"><div class="label">Type</div><div class="value">@Model.Type</div></div>
+            <div class="detail-item"><div class="label">Reason</div><div class="value">@Model.Reason</div></div>
+            <div class="detail-item"><div class="label">Requester</div><div class="value">@Model.Requester</div></div>
+            <div class="detail-item"><div class="label">Remark</div><div class="value">@(string.IsNullOrWhiteSpace(Model.Remark) ? "-" : Model.Remark)</div></div>
+            <div class="detail-item"><div class="label">Created At</div><div class="value">@Ui.DateTime(Model.CreatedAt)</div></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card table-card h-100">
+            <div class="card-header"><h2 class="card-title-sm">Items <span class="text-muted fw-normal">(@Model.Lines.Count)</span></h2></div>
+            <div class="table-responsive">
+                <table class="table table-app">
+                    <thead><tr><th>#</th><th>Product</th><th class="text-end">System Qty</th><th class="text-end">Adjust</th><th class="text-end">After</th><th>UOM</th><th>Remark</th></tr></thead>
+                    <tbody>
+                        @for (var i = 0; i < Model.Lines.Count; i++)
+                        {
+                            var l = Model.Lines[i];
+                            <tr>
+                                <td class="text-muted">@(i + 1)</td>
+                                <td><div class="fw-medium">@l.ProductName</div><div class="small text-muted">@l.ProductCode</div></td>
+                                <td class="text-end">@Ui.Num(l.SystemQty)</td>
+                                <td class="text-end fw-semibold @(sign > 0 ? "adj-inc" : "adj-dec")">@(sign > 0 ? "+" : "−")@Ui.Num(l.Qty)</td>
+                                <td class="text-end">@Ui.Num(l.SystemQty + sign * l.Qty)</td>
+                                <td>@l.Uom</td>
+                                <td class="text-muted">@(l.Remark ?? "-")</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot><tr><td colspan="3" class="text-end">Total</td><td class="text-end">@(sign > 0 ? "+" : "−")@Ui.Num(Model.TotalQty)</td><td colspan="3"></td></tr></tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header"><h2 class="card-title-sm">Timeline</h2></div>
+            <div class="card-body">
+                <ul class="timeline">
+                    <li class="t-pending">
+                        <div class="fw-medium">Submitted</div>
+                        <div class="small text-muted">@Model.Requester · @Ui.DateTime(Model.CreatedAt)</div>
+                    </li>
+                    @if (Model.Status == DocStatus.Pending)
+                    {
+                        <li class="t-pending"><div class="fw-medium">Waiting for approval</div><div class="small text-muted">รออนุมัติ</div></li>
+                    }
+                    else
+                    {
+                        <li class="@(Model.Status == DocStatus.Approved ? "t-approved" : "t-rejected")">
+                            <div class="fw-medium">@Model.Status</div>
+                            <div class="small text-muted">@Model.ActionBy · @Ui.DateTime(Model.ActionAt)</div>
+                            @if (!string.IsNullOrWhiteSpace(Model.ActionRemark))
+                            {
+                                <div class="small mt-1">“@Model.ActionRemark”</div>
+                            }
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

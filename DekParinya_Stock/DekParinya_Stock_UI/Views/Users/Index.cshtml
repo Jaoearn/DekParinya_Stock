@@ -1,0 +1,75 @@
+@model List<AppUser>
+@{
+    ViewData["Title"] = "Users";
+    var keyword = ViewBag.Keyword as string;
+    var role = ViewBag.Role as string;
+}
+
+<div class="page-header">
+    <div>
+        <nav class="breadcrumb"><a asp-controller="Home" asp-action="Index">Dashboard</a>&nbsp;/&nbsp;Users</nav>
+        <h1 class="page-title">Users</h1>
+        <p class="page-subtitle">จัดการผู้ใช้งาน (ต้นแบบ — ยังไม่แยกสิทธิ์ตามบทบาท)</p>
+    </div>
+    <a class="btn btn-primary" asp-action="Create"><i class="bi bi-person-plus me-1"></i>Add User</a>
+</div>
+
+<div class="card filter-bar mb-3">
+    <div class="card-body">
+        <form method="get" asp-action="Index" class="row g-2 align-items-end">
+            <div class="col-md-6">
+                <label class="form-label" for="keyword">Keyword</label>
+                <input type="text" class="form-control" id="keyword" name="keyword" value="@keyword" placeholder="ชื่อ / อีเมล / แผนก" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="role">Role</label>
+                <select class="form-select" id="role" name="role">
+                    <option value="">All</option>
+                    @foreach (var r in Lookups.Roles)
+                    {
+                        <option value="@r" selected="@(role == r)">@r</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-search flex-grow-1"><i class="bi bi-search"></i> Search</button>
+                <a class="btn btn-outline-dark-grey" asp-action="Index" title="Reset"><i class="bi bi-arrow-counterclockwise"></i></a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card table-card">
+    <div class="card-header"><h2 class="card-title-sm">Users <span class="text-muted fw-normal">(@Model.Count)</span></h2></div>
+    <div class="table-responsive">
+        <table class="table table-app table-hover">
+            <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Department</th><th>Phone</th><th>Status</th><th class="text-end"></th></tr></thead>
+            <tbody>
+                @foreach (var u in Model)
+                {
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="avatar" style="width:30px;height:30px;font-size:.8rem">@u.FullName.Substring(0, 1)</span>
+                                <span class="fw-medium">@u.FullName</span>
+                            </div>
+                        </td>
+                        <td>@u.Email</td>
+                        <td><span class="code-pill">@u.Role</span></td>
+                        <td>@u.Department</td>
+                        <td class="text-muted">@(u.Phone ?? "-")</td>
+                        <td>
+                            @if (u.IsActive) { <span class="badge-status status-normal">Active</span> }
+                            else { <span class="badge-status badge-inactive">Inactive</span> }
+                        </td>
+                        <td class="text-end"><a class="btn btn-outline-dark-grey btn-icon" asp-action="Edit" asp-route-id="@u.Id" title="Edit"><i class="bi bi-pencil"></i></a></td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="7" class="empty-state"><i class="bi bi-people"></i>ไม่พบข้อมูล</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

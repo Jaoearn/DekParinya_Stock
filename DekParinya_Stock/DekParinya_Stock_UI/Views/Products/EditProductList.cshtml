@@ -1,0 +1,28 @@
+@model Product
+@{
+    ViewData["Title"] = "Edit Product";
+}
+
+<div class="page-header">
+    <div>
+        <nav class="breadcrumb"><a asp-action="ProductList">Product List</a>&nbsp;/&nbsp;Edit</nav>
+        <h1 class="page-title">Edit Product</h1>
+        <p class="page-subtitle">@Model.Code · @Model.Name · อัปเดตล่าสุด @Ui.DateTime(Model.UpdatedAt)</p>
+    </div>
+    <div>@Ui.StockBadge(Model.State)</div>
+</div>
+
+<form asp-action="EditProductList" asp-route-id="@Model.Id" method="post" class="card form-card">
+    <div class="card-body">
+        <input type="hidden" asp-for="Id" />
+        <partial name="_ProductForm" model="Model" />
+        <div class="form-actions">
+            <a class="btn btn-outline-dark-grey" asp-action="ProductList"><i class="bi bi-arrow-left me-1"></i>Back</a>
+            <div class="actions-right">
+                <button type="submit" class="btn btn-primary" data-confirm="ยืนยันการบันทึกการแก้ไข?" data-confirm-text="Save">
+                    <i class="bi bi-check2 me-1"></i>Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</form>

@@ -1,0 +1,170 @@
+@model PurchaseOrderViewModel
+@inject IDataStore Store
+@{
+    ViewData["Title"] = "Create Purchase Order";
+    var products = Store.GetProducts().Where(p => p.IsActive).ToList();
+    var vendors = Store.GetVendors();
+    var rows = Model.Lines.Any() ? Model.Lines : new List<PurchaseOrderLineInput> { new() { Qty = 1 } };
+}
+
+<div class="page-header">
+    <div>
+        <nav class="breadcrumb"><a asp-action="Index">Purchase Order</a>&nbsp;/&nbsp;Order</nav>
+        <h1 class="page-title">Create Purchase Order</h1>
+        <p class="page-subtitle">สร้างใบสั่งซื้อ และ Export เป็น Excel (ต้นแบบ — ยังไม่บันทึกเลขที่ PO)</p>
+    </div>
+</div>
+
+<form asp-action="Order" method="post" class="card form-card" novalidate>
+    <div class="card-body">
+        <div asp-validation-summary="All" class="validation-summary-errors"></div>
+
+        <div class="form-section">
+            <h6 class="fw-semibold form-section-title">Order Information</h6>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="Vendor" class="form-label">Vendor <span class="req">*</span></label>
+                    <input asp-for="Vendor" class="form-control" list="vendorList" placeholder="เลือกหรือพิมพ์ชื่อผู้ขาย" required />
+                    <datalist id="vendorList">
+                        @foreach (var v in vendors)
+                        {
+                            <option value="@v"></option>
+                        }
+                    </datalist>
+                    <span asp-validation-for="Vendor" class="field-validation-error"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="OrderDate" class="form-label">Order Date <span class="req">*</span></label>
+                    <input asp-for="OrderDate" type="date" class="form-control" value="@Ui.Iso(Model.OrderDate)" required />
+                    <span asp-validation-for="OrderDate" class="field-validation-error"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="ExpectedDate" class="form-label">Expected Date</label>
+                    <input asp-for="ExpectedDate" type="date" class="form-control" value="@Ui.Iso(Model.ExpectedDate)" />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="ContactName" class="form-label">Contact Person</label>
+                    <input asp-for="ContactName" class="form-control" placeholder="ชื่อผู้ติดต่อฝั่งผู้ขาย" />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="DeliverTo" class="form-label">Deliver To</label>
+                    <input asp-for="DeliverTo" class="form-control" />
+                </div>
+                <div class="col-12">
+                    <label asp-for="Remark" class="form-label">Remark</label>
+                    <textarea asp-for="Remark" class="form-control" rows="2" placeholder="เงื่อนไขการชำระเงิน / หมายเหตุ"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="fw-semibold form-section-title mb-0 border-0 pb-0">Items <span class="req">*</span></h6>
+                <button type="button" class="btn btn-outline-accent btn-sm" data-add-line="poLines"><i class="bi bi-plus-lg me-1"></i>Add Item</button>
+            </div>
+            <div class="table-responsive border rounded-3 mb-3">
+                <table class="table table-app line-table mb-0" id="poLines" data-line-table data-template="poLinesTpl" data-prefix="Lines">
+                    <thead>
+                        <tr>
+                            <th class="line-no">#</th>
+                            <th style="min-width:260px">Product <span class="req">*</span></th>
+                            <th class="text-end" style="width:90px">Stock</th>
+                            <th style="width:110px">Qty <span class="req">*</span></th>
+                            <th style="width:110px">UOM</th>
+                            <th style="width:130px">Unit Price</th>
+                            <th class="text-end" style="width:130px">Amount</th>
+                            <th style="min-width:160px">Remark</th>
+                            <th style="width:56px"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var line in rows)
+                        {
+                            <tr class="line-row">
+                                <td class="line-no"></td>
+                                <td>
+                                    <select class="form-select" data-field="ProductId" required>
+                                        <option value="">-- Select product --</option>
+                                        @foreach (var p in products)
+                                        {
+                                            <option value="@p.Id" data-uom="@p.Uom" data-stock="@p.StockQty" data-price="@p.UnitPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)" selected="@(p.Id == line.ProductId)">@p.Code · @p.Name</option>
+                                        }
+                                    </select>
+                                </td>
+                                <td class="text-end text-muted" data-stock-cell>-</td>
+                                <td><input type="number" class="form-control text-end" data-field="Qty" min="1" step="1" value="@(line.Qty > 0 ? line.Qty : 1)" required /></td>
+                                <td>
+                                    <select class="form-select" data-field="Uom">
+                                        @foreach (var u in Lookups.Uoms)
+                                        {
+                                            <option value="@u" selected="@(u == line.Uom)">@u</option>
+                                        }
+                                    </select>
+                                </td>
+                                <td><input type="number" class="form-control text-end" data-field="UnitPrice" min="0" step="0.01" value="@line.UnitPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)" /></td>
+                                <td class="text-end fw-semibold" data-amount>0.00</td>
+                                <td><input type="text" class="form-control" data-field="Remark" maxlength="200" value="@line.Remark" /></td>
+                                <td class="text-center"><button type="button" class="btn btn-outline-accent btn-icon" data-remove-line title="Remove"><i class="bi bi-x-lg"></i></button></td>
+                            </tr>
+                        }
+                        <tr class="line-empty" hidden><td colspan="9" class="empty-state py-4"><i class="bi bi-basket"></i>ยังไม่มีรายการ กด Add Item เพื่อเพิ่ม</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="row justify-content-end">
+                <div class="col-md-5 col-lg-4">
+                    <div class="summary-box">
+                        <div class="summary-row"><span>Items</span><span data-line-count>0</span></div>
+                        <div class="summary-row"><span>Total Qty</span><span data-total-qty>0</span></div>
+                        <div class="summary-row"><span>Subtotal</span><span>฿<span data-total-amount>0.00</span></span></div>
+                        <div class="summary-row"><span>VAT 7%</span><span>฿<span data-total-vat>0.00</span></span></div>
+                        <div class="summary-row total"><span>Grand Total</span><span>฿<span data-total-grand>0.00</span></span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <a class="btn btn-outline-dark-grey" asp-action="Index"><i class="bi bi-arrow-left me-1"></i>Back</a>
+            <div class="actions-right">
+                <button type="submit" name="submitAction" value="export" class="btn btn-blue" formnovalidate>
+                    <i class="bi bi-file-earmark-excel me-1"></i>Export Excel
+                </button>
+                <button type="submit" name="submitAction" value="create" class="btn btn-primary"
+                        data-confirm="ยืนยันการสร้างใบสั่งซื้อ?" data-confirm-detail="ต้นแบบ: ระบบยังไม่บันทึก PO" data-confirm-text="Create PO">
+                    <i class="bi bi-cart-check me-1"></i>Create PO
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<template id="poLinesTpl">
+    <tr class="line-row">
+        <td class="line-no"></td>
+        <td>
+            <select class="form-select" data-field="ProductId" required>
+                <option value="">-- Select product --</option>
+                @foreach (var p in products)
+                {
+                    <option value="@p.Id" data-uom="@p.Uom" data-stock="@p.StockQty" data-price="@p.UnitPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)">@p.Code · @p.Name</option>
+                }
+            </select>
+        </td>
+        <td class="text-end text-muted" data-stock-cell>-</td>
+        <td><input type="number" class="form-control text-end" data-field="Qty" min="1" step="1" value="1" required /></td>
+        <td>
+            <select class="form-select" data-field="Uom">
+                @foreach (var u in Lookups.Uoms)
+                {
+                    <option value="@u">@u</option>
+                }
+            </select>
+        </td>
+        <td><input type="number" class="form-control text-end" data-field="UnitPrice" min="0" step="0.01" value="0" /></td>
+        <td class="text-end fw-semibold" data-amount>0.00</td>
+        <td><input type="text" class="form-control" data-field="Remark" maxlength="200" /></td>
+        <td class="text-center"><button type="button" class="btn btn-outline-accent btn-icon" data-remove-line title="Remove"><i class="bi bi-x-lg"></i></button></td>
+    </tr>
+</template>

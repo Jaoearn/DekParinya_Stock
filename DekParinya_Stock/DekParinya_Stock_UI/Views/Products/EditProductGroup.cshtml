@@ -1,0 +1,27 @@
+@model ProductGroup
+@{
+    ViewData["Title"] = "Edit Product Group";
+}
+
+<div class="page-header">
+    <div>
+        <nav class="breadcrumb"><a asp-action="ProductGroup">Product Group</a>&nbsp;/&nbsp;Edit</nav>
+        <h1 class="page-title">Edit Product Group</h1>
+        <p class="page-subtitle">@Model.Code · @Model.Name</p>
+    </div>
+</div>
+
+<form asp-action="EditProductGroup" asp-route-id="@Model.Id" method="post" class="card form-card">
+    <div class="card-body">
+        <input type="hidden" asp-for="Id" />
+        <partial name="_ProductGroupForm" model="Model" />
+        <div class="form-actions">
+            <a class="btn btn-outline-dark-grey" asp-action="ProductGroup"><i class="bi bi-arrow-left me-1"></i>Back</a>
+            <div class="actions-right">
+                <button type="submit" class="btn btn-primary" data-confirm="ยืนยันการบันทึกการแก้ไข?" data-confirm-text="Save">
+                    <i class="bi bi-check2 me-1"></i>Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</form>

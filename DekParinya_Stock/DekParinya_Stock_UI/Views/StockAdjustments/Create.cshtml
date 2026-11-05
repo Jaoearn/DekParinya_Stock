@@ -1,0 +1,79 @@
+@model AdjustmentCreateViewModel
+@{
+    ViewData["Title"] = "Add Adjustment";
+    ViewData["StockLabel"] = "System Qty";
+    ViewData["LineTableId"] = "adjLines";
+}
+
+<div class="page-header">
+    <div>
+        <nav class="breadcrumb"><a asp-action="Index">Stock Adjustment</a>&nbsp;/&nbsp;Add</nav>
+        <h1 class="page-title">Add Adjustment</h1>
+        <p class="page-subtitle">สร้างใบปรับปรุงยอดสต๊อก — ต้องได้รับการอนุมัติก่อน</p>
+    </div>
+</div>
+
+<form asp-action="Create" method="post" class="card form-card" novalidate>
+    <div class="card-body">
+        <div asp-validation-summary="All" class="validation-summary-errors"></div>
+
+        <div class="form-section">
+            <h6 class="fw-semibold form-section-title">Adjustment Information</h6>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label asp-for="AdjustDate" class="form-label">Adjust Date <span class="req">*</span></label>
+                    <input asp-for="AdjustDate" class="form-control" type="date" value="@Ui.Iso(Model.AdjustDate)" required />
+                    <span asp-validation-for="AdjustDate" class="field-validation-error"></span>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Adjustment Type <span class="req">*</span></label>
+                    <div class="d-flex gap-3 pt-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" asp-for="Type" value="@AdjustmentType.Increase" id="typeInc" />
+                            <label class="form-check-label" for="typeInc"><span class="adj-type adj-inc"><i class="bi bi-plus-circle"></i> Increase</span></label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" asp-for="Type" value="@AdjustmentType.Decrease" id="typeDec" />
+                            <label class="form-check-label" for="typeDec"><span class="adj-type adj-dec"><i class="bi bi-dash-circle"></i> Decrease</span></label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="Reason" class="form-label">Reason <span class="req">*</span></label>
+                    <select asp-for="Reason" class="form-select" required>
+                        <option value="">-- Select --</option>
+                        @foreach (var r in Lookups.AdjustmentReasons)
+                        {
+                            <option value="@r">@r</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Reason" class="field-validation-error"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="Requester" class="form-label">Requester <span class="req">*</span></label>
+                    <input asp-for="Requester" class="form-control" required />
+                    <span asp-validation-for="Requester" class="field-validation-error"></span>
+                </div>
+                <div class="col-12">
+                    <label asp-for="Remark" class="form-label">Remark</label>
+                    <textarea asp-for="Remark" class="form-control" rows="2" placeholder="รายละเอียดการปรับปรุง"></textarea>
+                    <span asp-validation-for="Remark" class="field-validation-error"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <partial name="_DocLinesTable" model="Model.Lines" view-data="ViewData" />
+            <div class="small text-muted"><i class="bi bi-info-circle me-1"></i>Qty คือจำนวนที่ต้องการเพิ่ม/ลด จาก System Qty</div>
+        </div>
+
+        <div class="form-actions">
+            <a class="btn btn-outline-dark-grey" asp-action="Index"><i class="bi bi-arrow-left me-1"></i>Back</a>
+            <div class="actions-right">
+                <button type="submit" class="btn btn-primary" data-confirm="ยืนยันการสร้างใบปรับปรุงสต๊อก?" data-confirm-detail="เอกสารจะถูกส่งไปรออนุมัติ" data-confirm-text="Submit">
+                    <i class="bi bi-send me-1"></i>Submit Adjustment
+                </button>
+            </div>
+        </div>
+    </div>
+</form>

@@ -1,0 +1,78 @@
+@model List<ProductGroup>
+@inject IDataStore Store
+@{
+    ViewData["Title"] = "Product Group";
+    var keyword = ViewBag.Keyword as string;
+    var status = ViewBag.Status as string;
+    var counts = Store.GetProducts().GroupBy(p => p.GroupId).ToDictionary(g => g.Key, g => g.Count());
+}
+
+<div class="page-header">
+    <div>
+        <nav class="breadcrumb"><a asp-controller="Home" asp-action="Index">Dashboard</a>&nbsp;/&nbsp;Products</nav>
+        <h1 class="page-title">Product Group</h1>
+        <p class="page-subtitle">จัดการกลุ่มสินค้า</p>
+    </div>
+    <a class="btn btn-primary" asp-action="CreateProductGroups"><i class="bi bi-plus-lg me-1"></i>Add Product Group</a>
+</div>
+
+<div class="card filter-bar mb-3">
+    <div class="card-body">
+        <form method="get" asp-action="ProductGroup" class="row g-2 align-items-end">
+            <div class="col-md-6">
+                <label class="form-label" for="keyword">Keyword</label>
+                <input type="text" class="form-control" id="keyword" name="keyword" value="@keyword" placeholder="รหัส / ชื่อกลุ่ม / รายละเอียด" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="status">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">All</option>
+                    <option value="active" selected="@(status == "active")">Active</option>
+                    <option value="inactive" selected="@(status == "inactive")">Inactive</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-search flex-grow-1"><i class="bi bi-search"></i> Search</button>
+                <a class="btn btn-outline-dark-grey" asp-action="ProductGroup" title="Reset"><i class="bi bi-arrow-counterclockwise"></i></a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card table-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h2 class="card-title-sm">All Groups <span class="text-muted fw-normal">(@Model.Count)</span></h2>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-app table-hover">
+            <thead>
+                <tr><th>Group Code</th><th>Group Name</th><th>Description</th><th class="text-end">Products</th><th>Status</th><th class="text-end">Actions</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var g in Model)
+                {
+                    <tr>
+                        <td><span class="code-pill">@g.Code</span></td>
+                        <td class="fw-medium">@g.Name</td>
+                        <td class="text-muted">@(g.Description ?? "-")</td>
+                        <td class="text-end">
+                            <a asp-action="ProductList" asp-route-groupId="@g.Id">@(counts.TryGetValue(g.Id, out var c) ? c : 0)</a>
+                        </td>
+                        <td>
+                            @if (g.IsActive) { <span class="badge-status status-normal">Active</span> }
+                            else { <span class="badge-status badge-inactive">Inactive</span> }
+                        </td>
+                        <td class="text-end text-nowrap">
+                            <a class="btn btn-outline-dark-grey btn-icon" asp-action="EditProductGroup" asp-route-id="@g.Id" title="Edit"><i class="bi bi-pencil"></i></a>
+                            <a class="btn btn-outline-accent btn-icon" asp-action="DeleteProductGroup" asp-route-id="@g.Id" title="Delete"><i class="bi bi-trash"></i></a>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="6" class="empty-state"><i class="bi bi-inbox"></i>ไม่พบข้อมูล</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

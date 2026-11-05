@@ -1,0 +1,63 @@
+@model List<VendorDemandRow>
+@{
+    ViewData["Title"] = "Vendor Orders";
+    var keyword = ViewBag.Keyword as string;
+}
+
+<div class="page-header">
+    <div>
+        <nav class="breadcrumb"><a asp-controller="PurchaseOrders" asp-action="Index">Purchase Order</a>&nbsp;/&nbsp;Vendor Orders</nav>
+        <h1 class="page-title">Vendor Orders</h1>
+        <p class="page-subtitle">ความต้องการสินค้าแยกตามผู้ขาย (สินค้าใกล้หมด/หมด + ยอดเบิกที่รออนุมัติ)</p>
+    </div>
+</div>
+
+<div class="card filter-bar mb-3">
+    <div class="card-body">
+        <form method="get" asp-action="Index" class="row g-2 align-items-end">
+            <div class="col-md-9">
+                <label class="form-label" for="keyword">Vendor</label>
+                <input type="text" class="form-control" id="keyword" name="keyword" value="@keyword" placeholder="ชื่อผู้ขาย" />
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-search flex-grow-1"><i class="bi bi-search"></i> Search</button>
+                <a class="btn btn-outline-dark-grey" asp-action="Index" title="Reset"><i class="bi bi-arrow-counterclockwise"></i></a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card table-card">
+    <div class="table-responsive">
+        <table class="table table-app table-hover">
+            <thead>
+                <tr><th>Vendor</th><th class="text-end">Products</th><th class="text-end">Low</th><th class="text-end">Out</th><th class="text-end">Pending Req. Qty</th><th class="text-end">Suggested Qty</th><th class="text-end">Est. Amount</th><th class="text-end"></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var r in Model)
+                {
+                    <tr>
+                        <td><a class="doc-link" asp-action="Details" asp-route-vendor="@r.Vendor">@r.Vendor</a></td>
+                        <td class="text-end">@r.ProductCount</td>
+                        <td class="text-end">@if (r.LowCount > 0) { <span class="badge-status status-pending">@r.LowCount</span> } else { <span class="text-muted">0</span> }</td>
+                        <td class="text-end">@if (r.OutCount > 0) { <span class="badge-status status-rejected">@r.OutCount</span> } else { <span class="text-muted">0</span> }</td>
+                        <td class="text-end">@Ui.Num(r.PendingRequisitionQty)</td>
+                        <td class="text-end fw-semibold text-deep-blue">@Ui.Num(r.SuggestedQty)</td>
+                        <td class="text-end">@Ui.Money(r.EstimatedAmount)</td>
+                        <td class="text-end text-nowrap">
+                            <a class="btn btn-outline-dark-grey btn-sm" asp-action="Details" asp-route-vendor="@r.Vendor">View</a>
+                            @if (r.SuggestedQty > 0)
+                            {
+                                <a class="btn btn-primary btn-sm" asp-controller="PurchaseOrders" asp-action="Order" asp-route-vendor="@r.Vendor"><i class="bi bi-cart-plus"></i> Order</a>
+                            }
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="8" class="empty-state"><i class="bi bi-truck"></i>ไม่พบข้อมูล</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

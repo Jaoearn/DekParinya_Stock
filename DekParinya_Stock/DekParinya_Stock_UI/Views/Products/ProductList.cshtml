@@ -1,0 +1,98 @@
+@model List<Product>
+@inject IDataStore Store
+@{
+    ViewData["Title"] = "Product List";
+    var keyword = ViewBag.Keyword as string;
+    var groupId = ViewBag.GroupId as int?;
+    var stock = ViewBag.Stock as string;
+    var groups = Store.GetGroups();
+    var groupNames = groups.ToDictionary(g => g.Id, g => g.Name);
+}
+
+<div class="page-header">
+    <div>
+        <nav class="breadcrumb"><a asp-controller="Home" asp-action="Index">Dashboard</a>&nbsp;/&nbsp;Products</nav>
+        <h1 class="page-title">Product List</h1>
+        <p class="page-subtitle">รายการสินค้าทั้งหมด</p>
+    </div>
+    <a class="btn btn-primary" asp-action="CreateProductList" asp-route-groupId="@groupId"><i class="bi bi-plus-lg me-1"></i>Add Product</a>
+</div>
+
+<div class="card filter-bar mb-3">
+    <div class="card-body">
+        <form method="get" asp-action="ProductList" class="row g-2 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label" for="keyword">Keyword</label>
+                <input type="text" class="form-control" id="keyword" name="keyword" value="@keyword" placeholder="รหัส / ชื่อสินค้า / ผู้ขาย" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="groupId">Product Group</label>
+                <select class="form-select" id="groupId" name="groupId">
+                    <option value="">All</option>
+                    @foreach (var g in groups)
+                    {
+                        <option value="@g.Id" selected="@(groupId == g.Id)">@g.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="stock">Stock Status</label>
+                <select class="form-select" id="stock" name="stock">
+                    <option value="">All</option>
+                    <option value="Normal" selected="@(stock == "Normal")">ปกติ</option>
+                    <option value="Low" selected="@(stock == "Low")">ใกล้หมด</option>
+                    <option value="Out" selected="@(stock == "Out")">หมด</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-search flex-grow-1"><i class="bi bi-search"></i> Search</button>
+                <a class="btn btn-outline-dark-grey" asp-action="ProductList" title="Reset"><i class="bi bi-arrow-counterclockwise"></i></a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card table-card">
+    <div class="card-header"><h2 class="card-title-sm">Products <span class="text-muted fw-normal">(@Model.Count)</span></h2></div>
+    <div class="table-responsive">
+        <table class="table table-app table-hover">
+            <thead>
+                <tr>
+                    <th>Code</th><th>Product Name</th><th>Group</th><th>UOM</th>
+                    <th class="text-end">Unit Price</th><th class="text-end">Stock</th><th class="text-end">Reorder</th>
+                    <th>Stock Status</th><th>Active</th><th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in Model)
+                {
+                    <tr>
+                        <td><span class="code-pill">@p.Code</span></td>
+                        <td>
+                            <div class="fw-medium">@p.Name</div>
+                            <div class="small text-muted">@(p.Vendor ?? "-")</div>
+                        </td>
+                        <td>@(groupNames.TryGetValue(p.GroupId, out var gName) ? gName : "-")</td>
+                        <td>@p.Uom</td>
+                        <td class="text-end">@Ui.Money(p.UnitPrice)</td>
+                        <td class="text-end fw-semibold">@Ui.Num(p.StockQty)</td>
+                        <td class="text-end text-muted">@Ui.Num(p.ReorderLevel)</td>
+                        <td>@Ui.StockBadge(p.State)</td>
+                        <td>
+                            @if (p.IsActive) { <i class="bi bi-check-circle-fill text-deep-blue"></i> }
+                            else { <i class="bi bi-dash-circle text-muted"></i> }
+                        </td>
+                        <td class="text-end text-nowrap">
+                            <a class="btn btn-outline-dark-grey btn-icon" asp-action="EditProductList" asp-route-id="@p.Id" title="Edit"><i class="bi bi-pencil"></i></a>
+                            <a class="btn btn-outline-accent btn-icon" asp-action="DeleteProductList" asp-route-id="@p.Id" title="Delete"><i class="bi bi-trash"></i></a>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="10" class="empty-state"><i class="bi bi-inbox"></i>ไม่พบข้อมูล</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

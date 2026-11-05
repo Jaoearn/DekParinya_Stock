@@ -1,0 +1,26 @@
+@model StockRequisition
+@{
+    ViewData["Title"] = Model.DocNo;
+}
+
+<div class="page-header">
+    <div>
+        <nav class="breadcrumb"><a asp-action="Index">Stock Requisition</a>&nbsp;/&nbsp;@Model.DocNo</nav>
+        <h1 class="page-title">Requisition Details</h1>
+    </div>
+</div>
+
+<div class="form-card">
+    <partial name="_RequisitionDoc" model="Model" />
+
+    <div class="form-actions no-print">
+        <a class="btn btn-outline-dark-grey" asp-action="Index"><i class="bi bi-arrow-left me-1"></i>Back</a>
+        <div class="actions-right">
+            <button type="button" class="btn btn-outline-dark-grey" data-print><i class="bi bi-printer me-1"></i>Print</button>
+            @if (Model.Status == DocStatus.Pending)
+            {
+                <a class="btn btn-primary" asp-controller="StockRequisitionApproval" asp-action="Details" asp-route-id="@Model.Id"><i class="bi bi-check2-square me-1"></i>Go to Approval</a>
+            }
+        </div>
+    </div>
+</div>

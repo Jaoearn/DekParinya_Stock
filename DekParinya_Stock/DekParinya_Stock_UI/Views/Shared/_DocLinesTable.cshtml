@@ -1,0 +1,93 @@
+@model List<DocLineInput>
+@inject IDataStore Store
+@{
+    // ตารางรายการสินค้า ใช้ร่วมกันระหว่าง Stock Requisition และ Stock Adjustment
+    var products = Store.GetProducts().Where(p => p.IsActive).ToList();
+    var stockLabel = ViewData["StockLabel"] as string ?? "Stock";
+    var tableId = ViewData["LineTableId"] as string ?? "lineTable";
+    var rows = Model.Any() ? Model : new List<DocLineInput> { new() };
+}
+
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h6 class="fw-semibold form-section-title mb-0 border-0 pb-0">Items <span class="req">*</span></h6>
+    <button type="button" class="btn btn-outline-accent btn-sm" data-add-line="@tableId"><i class="bi bi-plus-lg me-1"></i>Add Item</button>
+</div>
+<div class="table-responsive border rounded-3 mb-2">
+    <table class="table table-app line-table mb-0" id="@tableId" data-line-table data-template="@(tableId)Tpl" data-prefix="Lines">
+        <thead>
+            <tr>
+                <th class="line-no">#</th>
+                <th style="min-width:280px">Product <span class="req">*</span></th>
+                <th class="text-end" style="width:110px">@stockLabel</th>
+                <th style="width:130px">Qty <span class="req">*</span></th>
+                <th style="width:120px">UOM <span class="req">*</span></th>
+                <th style="min-width:200px">Remark</th>
+                <th style="width:56px"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var line in rows)
+            {
+                <tr class="line-row">
+                    <td class="line-no"></td>
+                    <td>
+                        <select class="form-select" data-field="ProductId" required>
+                            <option value="">-- Select product --</option>
+                            @foreach (var p in products)
+                            {
+                                <option value="@p.Id" data-uom="@p.Uom" data-stock="@p.StockQty" selected="@(p.Id == line.ProductId)">@p.Code · @p.Name</option>
+                            }
+                        </select>
+                    </td>
+                    <td class="text-end text-muted" data-stock-cell>-</td>
+                    <td><input type="number" class="form-control text-end" data-field="Qty" min="1" step="1" value="@(line.Qty > 0 ? line.Qty : 1)" required /></td>
+                    <td>
+                        <select class="form-select" data-field="Uom">
+                            @foreach (var u in Lookups.Uoms)
+                            {
+                                <option value="@u" selected="@(u == line.Uom)">@u</option>
+                            }
+                        </select>
+                    </td>
+                    <td><input type="text" class="form-control" data-field="Remark" maxlength="200" value="@line.Remark" placeholder="หมายเหตุ" /></td>
+                    <td class="text-center"><button type="button" class="btn btn-outline-accent btn-icon" data-remove-line title="Remove"><i class="bi bi-x-lg"></i></button></td>
+                </tr>
+            }
+            <tr class="line-empty" hidden><td colspan="7" class="empty-state py-4"><i class="bi bi-basket"></i>ยังไม่มีรายการ กด Add Item เพื่อเพิ่ม</td></tr>
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3" class="text-end">รวม (<span data-line-count>0</span> รายการ)</td>
+                <td class="text-end" data-total-qty>0</td>
+                <td colspan="3"></td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+<template id="@(tableId)Tpl">
+    <tr class="line-row">
+        <td class="line-no"></td>
+        <td>
+            <select class="form-select" data-field="ProductId" required>
+                <option value="">-- Select product --</option>
+                @foreach (var p in products)
+                {
+                    <option value="@p.Id" data-uom="@p.Uom" data-stock="@p.StockQty">@p.Code · @p.Name</option>
+                }
+            </select>
+        </td>
+        <td class="text-end text-muted" data-stock-cell>-</td>
+        <td><input type="number" class="form-control text-end" data-field="Qty" min="1" step="1" value="1" required /></td>
+        <td>
+            <select class="form-select" data-field="Uom">
+                @foreach (var u in Lookups.Uoms)
+                {
+                    <option value="@u">@u</option>
+                }
+            </select>
+        </td>
+        <td><input type="text" class="form-control" data-field="Remark" maxlength="200" placeholder="หมายเหตุ" /></td>
+        <td class="text-center"><button type="button" class="btn btn-outline-accent btn-icon" data-remove-line title="Remove"><i class="bi bi-x-lg"></i></button></td>
+    </tr>
+</template>
